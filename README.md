@@ -1,73 +1,113 @@
-# React + TypeScript + Vite
+# Screening Sampler
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Screening Sampler is a client-side web application for generating synthetic SEPA SCT INST payment samples for screening and sanctions-testing scenarios.
 
-Currently, two official plugins are available:
+The application runs entirely in the browser. It does not use an API or backend service. Production build output is bundled into a single runnable HTML file.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What It Does
 
-## React Compiler
+- Loads CSV source lists for:
+  - person names
+  - person surnames
+  - company names
+  - BIC codes
+  - addresses
+  - countries
+  - narratives
+- Lets users preview and maintain each source list directly in the UI
+- Lets users tag any source row as a bad actor row
+- Generates synthetic person records from uploaded names and surnames
+- Generates SEPA SCT INST payment messages from the uploaded source data
+- Exports generated data as:
+  - ZIP archive of `.xml` payment files
+  - CSV with one base64-encoded SEPA message per row
+  - CSV of bad actor source-row IDs used in generated payments
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Main Workflow
 
-## Expanding the ESLint configuration
+1. Load the required CSV source files in the `Inputs` section.
+2. Review, add, edit, or delete source rows.
+3. Mark any source rows that should be treated as bad actors.
+4. Configure generation settings in the `Generation` section.
+5. Generate people and payment samples.
+6. Export the generated output from the `Exports` section.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Source Lists
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Each source list is stored in application state with:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- a stable internal row ID
+- the row value
+- a bad actor flag
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+If a tagged row is used during payment generation, its source-row ID is carried into the bad actor export.
+
+## Exports
+
+### XML ZIP
+
+Exports one SEPA SCT INST XML file per generated payment inside a ZIP archive.
+
+### Base64 CSV
+
+Exports one generated payment per CSV row. Each row contains the message payload encoded as base64.
+
+### Bad Actor ID CSV
+
+Exports tagged source-row IDs that were actually used in generated payments, including:
+
+- source row ID
+- source row value
+- generated payment ID
+- generated message ID
+
+## Tech Stack
+
+- React
+- TypeScript
+- Vite
+- Redux Toolkit
+- React Redux
+- Radix UI
+- JSZip
+- `vite-plugin-singlefile`
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Start the development server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Run linting:
+
+```bash
+npm run lint
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+## Build Output
+
+The production build is configured to inline the application into a single HTML file:
+
+- `dist/index.html`
+
+This makes it suitable for internal distribution where a standalone client-side artifact is preferred.
