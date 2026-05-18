@@ -14,6 +14,8 @@ The application runs entirely in the browser. It does not use an API or backend 
   - addresses
   - countries
   - narratives
+- Appends new CSV uploads into the existing dataset instead of replacing prior rows
+- Lets the user choose whether each uploaded CSV contains `good actors` or `bad actors`
 - Lets users preview and maintain each source list directly in the UI
 - Lets users tag any source row as a bad actor row
 - Generates synthetic person records from uploaded names and surnames
@@ -25,9 +27,9 @@ The application runs entirely in the browser. It does not use an API or backend 
 
 ## Main Workflow
 
-1. Load the required CSV source files in the `Inputs` section.
-2. Review, add, edit, or delete source rows.
-3. Mark any source rows that should be treated as bad actors.
+1. Load one or more CSV files into each required source list in the `Inputs` section.
+2. For each upload, choose whether that CSV contains `good actors` or `bad actors`.
+3. Review, add, edit, delete, or retag individual source rows.
 4. Configure generation settings in the `Generation` section.
 5. Generate people and payment samples.
 6. Export the generated output from the `Exports` section.
@@ -39,6 +41,13 @@ Each source list is stored in application state with:
 - a stable internal row ID
 - the row value
 - a bad actor flag
+
+Source lists support both:
+
+- file-level classification during CSV import
+- row-level maintenance after import
+
+Loading another CSV into the same source list appends new rows to the existing dataset.
 
 If a tagged row is used during payment generation, its source-row ID is carried into the bad actor export.
 
@@ -60,6 +69,8 @@ Exports tagged source-row IDs that were actually used in generated payments, inc
 - source row value
 - generated payment ID
 - generated message ID
+
+Tagged rows can come from any supported source list, including narratives, if those rows are used in a generated payment.
 
 ## Tech Stack
 
