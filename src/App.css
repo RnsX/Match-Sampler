@@ -171,6 +171,38 @@
   color: var(--color-text-muted);
 }
 
+.source-type-toggle {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 16px;
+  margin-bottom: 4px;
+}
+
+.source-type-toggle__button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--color-text-strong);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.source-type-toggle__button--active {
+  border-color: var(--color-accent-strong);
+  background: rgba(13, 74, 108, 0.1);
+  color: var(--color-accent-strong);
+}
+
+.source-type-toggle__button--danger.source-type-toggle__button--active {
+  border-color: #8b351a;
+  background: rgba(173, 68, 31, 0.12);
+  color: #8b351a;
+}
+
 .field-label {
   display: block;
   margin-bottom: 8px;

@@ -39,10 +39,16 @@ const samplerSlice = createSlice({
   reducers: {
     datasetLoaded: (
       state,
-      action: PayloadAction<{ kind: DatasetKind; values: string[] }>,
+      action: PayloadAction<{
+        kind: DatasetKind
+        values: string[]
+        isBadActor?: boolean
+      }>,
     ) => {
-      state.datasets[action.payload.kind] = action.payload.values.map((value) =>
-        buildSourceEntry(value),
+      state.datasets[action.payload.kind].push(
+        ...action.payload.values.map((value) =>
+          buildSourceEntry(value, action.payload.isBadActor ?? false),
+        ),
       )
       state.generatedPersons = []
       state.payments = []

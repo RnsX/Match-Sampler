@@ -56,14 +56,18 @@ function App() {
   const [activeTab, setActiveTab] = useState('inputs')
   const [activeDatasetKind, setActiveDatasetKind] = useState<DatasetKind>('names')
 
-  const loadDataset = async (kind: DatasetKind, file: File | null) => {
+  const loadDataset = async (
+    kind: DatasetKind,
+    file: File | null,
+    isBadActor: boolean,
+  ) => {
     if (!file) {
       return
     }
 
     const content = await file.text()
     const values = parseCsvRows(content)
-    dispatch(datasetLoaded({ kind, values }))
+    dispatch(datasetLoaded({ kind, values, isBadActor }))
   }
 
   const runPersonGeneration = () => {
@@ -171,8 +175,8 @@ function App() {
                   description={datasetDescriptions[kind]}
                   label={datasetLabels[kind]}
                   rowCount={sampler.datasets[kind].length}
-                  onFileSelected={(file) => {
-                    void loadDataset(kind, file)
+                  onFileSelected={(file, isBadActor) => {
+                    void loadDataset(kind, file, isBadActor)
                   }}
                 />
               ))}
