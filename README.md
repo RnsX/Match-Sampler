@@ -98,6 +98,12 @@ Create a production build:
 npm run build
 ```
 
+Create the standalone single-file runnable build explicitly:
+
+```bash
+npm run build:single-html
+```
+
 Preview the production build:
 
 ```bash
