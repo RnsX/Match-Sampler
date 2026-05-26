@@ -80,7 +80,7 @@ Error generating stack: `+e.message+`
         </Id>
       </CdtrAcct>
       <RmtInf>
-        <Ustrd>${eo(e.remittanceInformation)}</Ustrd>
+        <Ustrd>${eo(e.remittanceInformation)} | has_bad_actors:${e.badActorIds.length}</Ustrd>
       </RmtInf>
     </CdtTrfTxInf>
   </FIToFICstmrCdtTrf>

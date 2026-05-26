@@ -264,7 +264,7 @@ function buildSepaXml(payment: Omit<PaymentSample, 'xml' | 'fileName'>) {
         </Id>
       </CdtrAcct>
       <RmtInf>
-        <Ustrd>${escapeXml(payment.remittanceInformation)}</Ustrd>
+        <Ustrd>${escapeXml(payment.remittanceInformation)} | has_bad_actors:${payment.badActorIds.length}</Ustrd>
       </RmtInf>
     </CdtTrfTxInf>
   </FIToFICstmrCdtTrf>
