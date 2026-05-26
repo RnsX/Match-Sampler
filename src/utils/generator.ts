@@ -73,6 +73,19 @@ function buildPerson(pool: SamplerState['datasets']): PersonProfile {
   }
 }
 
+function buildPredefinedPerson(pool: SamplerState['datasets']) : PersonProfile {
+  const fullName = randomItem(pool.people)
+  const sourceEntries = [fullName]
+  return {
+    id: crypto.randomUUID(),
+    givenName: 'intentionally empty',
+    surname: 'intentionally empty',
+    fullName: fullName.value,
+    sourceEntries:sourceEntries,
+    isBadActor: hasBadActor(sourceEntries),
+  }
+}
+
 export function validateGenerationInputs(state: SamplerState): string[] {
   const messages: string[] = []
   const requiredDatasetKinds = [
@@ -104,6 +117,14 @@ export function validateGenerationInputs(state: SamplerState): string[] {
   }
 
   return messages
+}
+
+export function getPredefinedPersons(
+    datasets: SamplerState['datasets'],
+) {
+  return Array.from({length: datasets.people.length}, () =>
+      buildPredefinedPerson(datasets)
+  )
 }
 
 export function generatePersons(
@@ -167,6 +188,7 @@ function buildDebtorAndCreditor(
   const debtor = debtorIsCompany
     ? buildCompanyParty(datasets)
     : buildPartyFromPerson(randomItem(persons), datasets)
+
   const creditor = creditorIsCompany
     ? buildCompanyParty(datasets)
     : buildPartyFromPerson(randomItem(persons), datasets)

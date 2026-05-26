@@ -6,6 +6,7 @@ export type DatasetKind =
   | 'addresses'
   | 'countries'
   | 'narratives'
+  | 'people'
 
 export interface SourceEntry {
   id: string

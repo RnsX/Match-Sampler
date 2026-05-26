@@ -26,6 +26,7 @@ const initialState: SamplerState = {
     addresses: [],
     countries: [],
     narratives: [],
+    people: [],
   },
   generatedPersons: [],
   payments: [],

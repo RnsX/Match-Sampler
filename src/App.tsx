@@ -36,6 +36,7 @@ import {
 import {
   generatePayments,
   generatePersons,
+  getPredefinedPersons,
   validateGenerationInputs,
 } from './utils/generator'
 import { formatCount } from './utils/format'
@@ -48,6 +49,7 @@ const datasetOrder: DatasetKind[] = [
   'addresses',
   'countries',
   'narratives',
+  'people'
 ]
 
 function App() {
@@ -92,8 +94,9 @@ function App() {
 
     const people =
       sampler.generatedPersons.length > 0
-        ? sampler.generatedPersons
-        : generatePersons(sampler.datasets, sampler.generationSettings)
+        ? [...sampler.generatedPersons, ...getPredefinedPersons(sampler.datasets)]
+        : [...generatePersons(sampler.datasets, sampler.generationSettings), ...getPredefinedPersons(sampler.datasets)]
+
     const payments = generatePayments(
       people,
       sampler.datasets,

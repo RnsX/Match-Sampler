@@ -8,6 +8,7 @@ export const datasetLabels: Record<DatasetKind, string> = {
   addresses: 'Addresses',
   countries: 'Countries',
   narratives: 'Narratives',
+  people: 'People'
 }
 
 export const datasetDescriptions: Record<DatasetKind, string> = {
@@ -18,6 +19,7 @@ export const datasetDescriptions: Record<DatasetKind, string> = {
   addresses: 'One postal address line per row.',
   countries: 'One ISO country code or country name per row.',
   narratives: 'One payment narrative or remittance text per row.',
+  people: 'Predefined person names/surnames'
 }
 
 export const datasetAccept = '.csv,text/csv'
