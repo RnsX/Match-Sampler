@@ -228,6 +228,7 @@ function buildSepaXml(payment: Omit<PaymentSample, 'xml' | 'fileName'>) {
       </PmtTpInf>
       <IntrBkSttlmAmt Ccy="${escapeXml(payment.currency)}">${payment.amount.toFixed(2)}</IntrBkSttlmAmt>
       <IntrBkSttlmDt>${payment.settlementDate}</IntrBkSttlmDt>
+      <AccptncDtTm>${new Date().toISOString()}</AccptncDtTm>
       <Dbtr>
         <Nm>${escapeXml(payment.debtor.name)}</Nm>
         <PstlAdr>
