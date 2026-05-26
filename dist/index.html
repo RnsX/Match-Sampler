@@ -44,6 +44,7 @@ Error generating stack: `+e.message+`
       </PmtTpInf>
       <IntrBkSttlmAmt Ccy="${eo(e.currency)}">${e.amount.toFixed(2)}</IntrBkSttlmAmt>
       <IntrBkSttlmDt>${e.settlementDate}</IntrBkSttlmDt>
+      <AccptncDtTm>${new Date().toISOString()}</AccptncDtTm>
       <Dbtr>
         <Nm>${eo(e.debtor.name)}</Nm>
         <PstlAdr>
