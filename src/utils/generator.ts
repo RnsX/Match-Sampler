@@ -59,6 +59,17 @@ function hasBadActor(entries: SourceEntry[]) {
   return entries.some((entry) => entry.isBadActor)
 }
 
+function withCustomerSideBic(party: Party, bicCode: string): Party {
+  const sourceEntries = party.sourceEntries.filter((entry) => entry.value !== party.bic)
+
+  return {
+    ...party,
+    bic: bicCode,
+    sourceEntries,
+    isBadActor: hasBadActor(sourceEntries),
+  }
+}
+
 function buildPerson(pool: SamplerState['datasets']): PersonProfile {
   const givenName = randomItem(pool.names)
   const surname = randomItem(pool.surnames)
@@ -86,7 +97,10 @@ function buildPredefinedPerson(pool: SamplerState['datasets']) : PersonProfile {
   }
 }
 
-export function validateGenerationInputs(state: SamplerState): string[] {
+export function validateGenerationInputs(
+  state: SamplerState,
+  options: { requireCustomerSideBicCode?: boolean } = {},
+): string[] {
   const messages: string[] = []
   const requiredDatasetKinds = [
     'names',
@@ -114,6 +128,13 @@ export function validateGenerationInputs(state: SamplerState): string[] {
 
   if (state.generationSettings.paymentCount < 1) {
     messages.push('Generate at least 1 payment sample.')
+  }
+
+  if (
+    options.requireCustomerSideBicCode &&
+    state.generationSettings.customerSideBicCode.trim().length === 0
+  ) {
+    messages.push('Enter a customer side BIC code before generating samples.')
   }
 
   return messages
@@ -277,7 +298,16 @@ export function generatePayments(
   settings: GenerationSettings,
 ) {
   return Array.from({ length: settings.paymentCount }, (_, index) => {
-    const { debtor, creditor } = buildDebtorAndCreditor(persons, datasets)
+    const parties = buildDebtorAndCreditor(persons, datasets)
+    const customerSideBicCode = settings.customerSideBicCode.trim().toUpperCase()
+    const debtor =
+      settings.customerSide === 'debit'
+        ? withCustomerSideBic(parties.debtor, customerSideBicCode)
+        : parties.debtor
+    const creditor =
+      settings.customerSide === 'credit'
+        ? withCustomerSideBic(parties.creditor, customerSideBicCode)
+        : parties.creditor
     const narrative = randomItem(datasets.narratives)
     const paymentId = `SCTINST-${Date.now()}-${index + 1}`
     const badActorIds = Array.from(new Set(

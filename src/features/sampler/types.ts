@@ -8,6 +8,8 @@ export type DatasetKind =
   | 'narratives'
   | 'people'
 
+export type CustomerSide = 'debit' | 'credit'
+
 export interface SourceEntry {
   id: string
   value: string
@@ -56,6 +58,8 @@ export interface GenerationSettings {
   amountMin: number
   amountMax: number
   currency: string
+  customerSide: CustomerSide
+  customerSideBicCode: string
 }
 
 export interface SamplerState {

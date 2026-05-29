@@ -30,4 +30,6 @@ export const initialGenerationSettings: GenerationSettings = {
   amountMin: 25,
   amountMax: 25000,
   currency: 'EUR',
+  customerSide: 'debit',
+  customerSideBicCode: '',
 }

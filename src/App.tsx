@@ -1,3 +1,4 @@
+import * as Label from '@radix-ui/react-label'
 import * as Tabs from '@radix-ui/react-tabs'
 import { useState } from 'react'
 import './App.css'
@@ -26,7 +27,7 @@ import {
   stateReset,
   validationMessagesSet,
 } from './features/sampler/dataSlice'
-import type { DatasetKind } from './features/sampler/types'
+import type { CustomerSide, DatasetKind } from './features/sampler/types'
 import { downloadBlob, parseCsvRows } from './utils/csv'
 import {
   exportBadActorIds,
@@ -85,7 +86,9 @@ function App() {
   }
 
   const runPaymentGeneration = () => {
-    const messages = validateGenerationInputs(sampler)
+    const messages = validateGenerationInputs(sampler, {
+      requireCustomerSideBicCode: true,
+    })
     if (messages.length > 0) {
       dispatch(validationMessagesSet(messages))
       setActiveTab('inputs')
@@ -183,6 +186,58 @@ function App() {
                   }}
                 />
               ))}
+              <div className="upload-card customer-side-card">
+                <div>
+                  <Label.Root className="field-label">Customer side of payment</Label.Root>
+                  <p className="field-hint">
+                    Select which payment side receives the configured BIC code.
+                  </p>
+                </div>
+                <div
+                  className="source-type-toggle"
+                  role="group"
+                  aria-label="Customer side of payment"
+                >
+                  {(['debit', 'credit'] as CustomerSide[]).map((side) => (
+                    <button
+                      key={side}
+                      className={`source-type-toggle__button ${
+                        sampler.generationSettings.customerSide === side
+                          ? 'source-type-toggle__button--active source-type-toggle__button--danger'
+                          : ''
+                      }`}
+                      type="button"
+                      onClick={() => {
+                        dispatch(generationSettingsUpdated({ customerSide: side }))
+                      }}
+                    >
+                      {side === 'debit' ? 'Debit' : 'Credit'}
+                    </button>
+                  ))}
+                </div>
+                <div className="field">
+                  <Label.Root className="field-label" htmlFor="customer-side-bic-code">
+                    Customer side BIC code
+                  </Label.Root>
+                  <input
+                    id="customer-side-bic-code"
+                    maxLength={11}
+                    placeholder="Example: BANKLV22"
+                    type="text"
+                    value={sampler.generationSettings.customerSideBicCode}
+                    onChange={(event) => {
+                      dispatch(
+                        generationSettingsUpdated({
+                          customerSideBicCode: event.target.value
+                            .trim()
+                            .toUpperCase()
+                            .slice(0, 11),
+                        }),
+                      )
+                    }}
+                  />
+                </div>
+              </div>
             </div>
             <DatasetOverview datasets={sampler.datasets} />
             <SourceListManager

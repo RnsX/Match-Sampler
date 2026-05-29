@@ -166,6 +166,12 @@
   background: var(--color-surface);
 }
 
+.customer-side-card {
+  border-color: #b3261e;
+  border-width: 2px;
+  background: rgba(255, 250, 249, 0.9);
+}
+
 .upload-card__meta {
   font-size: 0.92rem;
   color: var(--color-text-muted);
