@@ -9,6 +9,7 @@ import { FileUploadCard } from './components/FileUploadCard'
 import { GenerationPanel } from './components/GenerationPanel'
 import { MetricCard } from './components/MetricCard'
 import { PaymentsOverview } from './components/PaymentsOverview'
+import { ResultsAnalyzer } from './components/ResultsAnalyzer'
 import { SectionCard } from './components/SectionCard'
 import { SourceListManager } from './components/SourceListManager'
 import {
@@ -18,6 +19,7 @@ import {
 import {
   datasetEntryAdded,
   datasetEntryBadActorToggled,
+  datasetEntryTagsUpdated,
   datasetEntryRemoved,
   datasetEntryUpdated,
   datasetLoaded,
@@ -25,15 +27,23 @@ import {
   paymentsGenerated,
   personsGenerated,
   stateReset,
+  stateImported,
+  analyzerResultsLoaded,
+  analyzerBadActorsLoaded,
+  analyzerSettingsUpdated,
   validationMessagesSet,
 } from './features/sampler/dataSlice'
 import type { CustomerSide, DatasetKind } from './features/sampler/types'
-import { downloadBlob, parseCsvRows } from './utils/csv'
+import { downloadBlob, parseCsvRows, parseCsvTable } from './utils/csv'
 import {
   exportBadActorIds,
   exportPaymentsCsv,
   exportPaymentsZip,
+  exportAppState,
+  getBadActorIds,
 } from './utils/export'
+import { parseBadActorTable } from './utils/resultReader'
+import { parseAppState } from './utils/state'
 import {
   generatePayments,
   generatePersons,
@@ -63,6 +73,7 @@ function App() {
     kind: DatasetKind,
     file: File | null,
     isBadActor: boolean,
+    tags: string[],
   ) => {
     if (!file) {
       return
@@ -70,7 +81,7 @@ function App() {
 
     const content = await file.text()
     const values = parseCsvRows(content)
-    dispatch(datasetLoaded({ kind, values, isBadActor }))
+    dispatch(datasetLoaded({ kind, values, isBadActor, tags }))
   }
 
   const runPersonGeneration = () => {
@@ -141,7 +152,7 @@ function App() {
 
       {sampler.validationMessages.length > 0 ? (
         <section className="alert-banner" aria-live="polite">
-          <strong>Generation blocked</strong>
+          <strong>Action required</strong>
           <ul>
             {sampler.validationMessages.map((message) => (
               <li key={message}>{message}</li>
@@ -160,6 +171,9 @@ function App() {
           </Tabs.Trigger>
           <Tabs.Trigger className="tab-trigger" value="exports">
             Exports
+          </Tabs.Trigger>
+          <Tabs.Trigger className="tab-trigger" value="analyze">
+            Analyze results
           </Tabs.Trigger>
         </Tabs.List>
 
@@ -181,8 +195,8 @@ function App() {
                   description={datasetDescriptions[kind]}
                   label={datasetLabels[kind]}
                   rowCount={sampler.datasets[kind].length}
-                  onFileSelected={(file, isBadActor) => {
-                    void loadDataset(kind, file, isBadActor)
+                  onFileSelected={(file, isBadActor, tags) => {
+                    void loadDataset(kind, file, isBadActor, tags)
                   }}
                 />
               ))}
@@ -244,14 +258,17 @@ function App() {
               activeKind={activeDatasetKind}
               datasets={sampler.datasets}
               onActiveKindChange={setActiveDatasetKind}
-              onAddEntry={(kind, value, isBadActor) => {
-                dispatch(datasetEntryAdded({ kind, value, isBadActor }))
+              onAddEntry={(kind, value, isBadActor, tags) => {
+                dispatch(datasetEntryAdded({ kind, value, isBadActor, tags }))
               }}
               onUpdateEntry={(kind, id, value) => {
                 dispatch(datasetEntryUpdated({ kind, id, value }))
               }}
               onToggleBadActor={(kind, id) => {
                 dispatch(datasetEntryBadActorToggled({ kind, id }))
+              }}
+              onUpdateTags={(kind, id, tags) => {
+                dispatch(datasetEntryTagsUpdated({ kind, id, tags }))
               }}
               onDeleteEntry={(kind, id) => {
                 dispatch(datasetEntryRemoved({ kind, id }))
@@ -312,10 +329,46 @@ function App() {
               onExportZip={() => {
                 void exportPaymentsZip(sampler.payments)
               }}
+              onExportState={() => exportAppState(sampler)}
+              onImportState={(file) => {
+                if (!file) return
+                void file.text().then((content) => {
+                  dispatch(stateImported(parseAppState(content)))
+                  setActiveTab('inputs')
+                }).catch((error: unknown) => {
+                  dispatch(validationMessagesSet([
+                    error instanceof Error ? error.message : 'Could not import app state.',
+                  ]))
+                })
+              }}
             />
             <PaymentsOverview
               payments={sampler.payments}
               persons={sampler.generatedPersons}
+            />
+          </SectionCard>
+        </Tabs.Content>
+
+        <Tabs.Content className="tab-panel" value="analyze">
+          <SectionCard
+            eyebrow="Results analyzer"
+            title="Analyze screening results"
+            description="Load screening output and bad actor references, define what constitutes a hit, and calculate overall and per-tag quality metrics."
+          >
+            <ResultsAnalyzer
+              analyzer={sampler.analyzer}
+              generatedBadActors={getBadActorIds(sampler.payments)}
+              onResultsLoaded={(fileName, table) =>
+                dispatch(analyzerResultsLoaded({ fileName, ...table }))
+              }
+              onBadActorsLoaded={(fileName, rows) =>
+                dispatch(analyzerBadActorsLoaded({ fileName, rows }))
+              }
+              onSettingsChange={(settings) => dispatch(analyzerSettingsUpdated(settings))}
+              parseResultsFile={async (file) => parseCsvTable(await file.text())}
+              parseBadActorsFile={async (file) =>
+                parseBadActorTable(parseCsvTable(await file.text()))
+              }
             />
           </SectionCard>
         </Tabs.Content>

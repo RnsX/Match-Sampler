@@ -8,8 +8,9 @@ interface SourceListManagerProps {
   activeKind: DatasetKind
   datasets: Record<DatasetKind, SourceEntry[]>
   onActiveKindChange: (kind: DatasetKind) => void
-  onAddEntry: (kind: DatasetKind, value: string, isBadActor: boolean) => void
+  onAddEntry: (kind: DatasetKind, value: string, isBadActor: boolean, tags: string[]) => void
   onUpdateEntry: (kind: DatasetKind, id: string, value: string) => void
+  onUpdateTags: (kind: DatasetKind, id: string, tags: string[]) => void
   onToggleBadActor: (kind: DatasetKind, id: string) => void
   onDeleteEntry: (kind: DatasetKind, id: string) => void
 }
@@ -20,17 +21,26 @@ export function SourceListManager({
   onActiveKindChange,
   onAddEntry,
   onUpdateEntry,
+  onUpdateTags,
   onToggleBadActor,
   onDeleteEntry,
 }: SourceListManagerProps) {
   const [draftValue, setDraftValue] = useState('')
   const [draftIsBadActor, setDraftIsBadActor] = useState(false)
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [draftTags, setDraftTags] = useState('')
+  const [tagFilter, setTagFilter] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editingValue, setEditingValue] = useState('')
   const activeDataset = datasets[activeKind]
+  const normalizedFilter = tagFilter.trim().toLocaleLowerCase()
+  const visibleDataset = activeDataset.filter(
+    (entry) =>
+      !normalizedFilter ||
+      entry.tags.some((tag) => tag.toLocaleLowerCase().includes(normalizedFilter)),
+  )
 
   const resetEditing = () => {
-    setEditingIndex(null)
+    setEditingId(null)
     setEditingValue('')
   }
 
@@ -48,6 +58,7 @@ export function SourceListManager({
               onClick={() => {
                 onActiveKindChange(kind as DatasetKind)
                 resetEditing()
+                setTagFilter('')
               }}
             >
               <span>{label}</span>
@@ -89,9 +100,15 @@ export function SourceListManager({
               if (!normalized) {
                 return
               }
-              onAddEntry(activeKind, normalized, draftIsBadActor)
+              onAddEntry(
+                activeKind,
+                normalized,
+                draftIsBadActor,
+                draftTags.split(',').map((tag) => tag.trim()).filter(Boolean),
+              )
               setDraftValue('')
               setDraftIsBadActor(false)
+              setDraftTags('')
             }}
           >
             Add entry
@@ -105,6 +122,32 @@ export function SourceListManager({
           />
           <span>Mark new row as bad actor</span>
         </label>
+        <div className="form-grid form-grid--compact">
+          <div className="field">
+            <Label.Root className="field-label" htmlFor="new-source-entry-tags">
+              New row tags
+            </Label.Root>
+            <input
+              id="new-source-entry-tags"
+              placeholder="Comma-separated, optional"
+              type="text"
+              value={draftTags}
+              onChange={(event) => setDraftTags(event.target.value)}
+            />
+          </div>
+          <div className="field">
+            <Label.Root className="field-label" htmlFor="source-tag-filter">
+              Filter list by tag
+            </Label.Root>
+            <input
+              id="source-tag-filter"
+              placeholder="Type a tag"
+              type="search"
+              value={tagFilter}
+              onChange={(event) => setTagFilter(event.target.value)}
+            />
+          </div>
+        </div>
 
         <ScrollArea.Root className="table-scroll source-manager__table">
           <ScrollArea.Viewport>
@@ -115,17 +158,20 @@ export function SourceListManager({
                   <th>Source row ID</th>
                   <th>Value</th>
                   <th>Bad actor</th>
+                  <th>Tags</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {activeDataset.length === 0 ? (
+                {visibleDataset.length === 0 ? (
                   <tr>
-                    <td colSpan={5}>No entries loaded yet.</td>
+                    <td colSpan={6}>
+                      {activeDataset.length === 0 ? 'No entries loaded yet.' : 'No entries match this tag.'}
+                    </td>
                   </tr>
                 ) : (
-                  activeDataset.map((entry, index) => {
-                    const isEditing = editingIndex === index
+                  visibleDataset.map((entry, index) => {
+                    const isEditing = editingId === entry.id
 
                     return (
                       <tr key={entry.id}>
@@ -151,6 +197,25 @@ export function SourceListManager({
                           >
                             {entry.isBadActor ? 'Tagged' : 'Not tagged'}
                           </button>
+                        </td>
+                        <td>
+                          <input
+                            aria-label={`Tags for ${entry.value}`}
+                            className="table-input"
+                            defaultValue={entry.tags.join(', ')}
+                            key={`${entry.id}-${entry.tags.join(',')}`}
+                            placeholder="No tags"
+                            type="text"
+                            onBlur={(event) => {
+                              const tags = event.target.value
+                                .split(',')
+                                .map((tag) => tag.trim())
+                                .filter(Boolean)
+                              if (tags.join(',') !== entry.tags.join(',')) {
+                                onUpdateTags(activeKind, entry.id, tags)
+                              }
+                            }}
+                          />
                         </td>
                         <td>
                           <div className="table-actions">
@@ -184,7 +249,7 @@ export function SourceListManager({
                                   className="button button--ghost button--small"
                                   type="button"
                                   onClick={() => {
-                                    setEditingIndex(index)
+                                    setEditingId(entry.id)
                                     setEditingValue(entry.value)
                                   }}
                                 >
@@ -195,7 +260,7 @@ export function SourceListManager({
                                   type="button"
                                   onClick={() => {
                                     onDeleteEntry(activeKind, entry.id)
-                                    if (editingIndex === index) {
+                                    if (editingId === entry.id) {
                                       resetEditing()
                                     }
                                   }}

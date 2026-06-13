@@ -5,7 +5,7 @@ import { datasetAccept } from '../features/sampler/constants'
 interface FileUploadCardProps {
   description: string
   label: string
-  onFileSelected: (file: File | null, isBadActor: boolean) => void
+  onFileSelected: (file: File | null, isBadActor: boolean, tags: string[]) => void
   rowCount: number
 }
 
@@ -16,6 +16,7 @@ export function FileUploadCard({
   rowCount,
 }: FileUploadCardProps) {
   const [sourceType, setSourceType] = useState<'good' | 'bad'>('good')
+  const [tags, setTags] = useState('')
 
   return (
     <div className="upload-card">
@@ -43,12 +44,25 @@ export function FileUploadCard({
           Bad actors
         </button>
       </div>
+      <div className="field">
+        <Label.Root className="field-label">Tags</Label.Root>
+        <input
+          placeholder="Comma-separated, optional"
+          type="text"
+          value={tags}
+          onChange={(event) => setTags(event.target.value)}
+        />
+      </div>
       <label className="file-picker">
         <input
           accept={datasetAccept}
           type="file"
           onChange={(event) => {
-            onFileSelected(event.target.files?.[0] ?? null, sourceType === 'bad')
+            onFileSelected(
+              event.target.files?.[0] ?? null,
+              sourceType === 'bad',
+              tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+            )
             event.currentTarget.value = ''
           }}
         />

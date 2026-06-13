@@ -18,12 +18,17 @@ The application runs entirely in the browser. It does not use an API or backend 
 - Lets the user choose whether each uploaded CSV contains `good actors` or `bad actors`
 - Lets users preview and maintain each source list directly in the UI
 - Lets users tag any source row as a bad actor row
+- Supports separate free-text tags on uploaded and individual source rows
+- Filters source lists and generated payment samples by tag
 - Generates synthetic person records from uploaded names and surnames
 - Generates SEPA SCT INST payment messages from the uploaded source data
 - Exports generated data as:
   - ZIP archive of `.xml` payment files
   - CSV with one base64-encoded SEPA message per row
   - CSV of bad actor source-row IDs used in generated payments
+- Analyzes arbitrary screening-result CSVs against bad actor references
+- Calculates overall and per-tag confusion matrices, accuracy, precision, recall, and F1
+- Exports and imports the complete application state as JSON
 
 ## Main Workflow
 
@@ -69,6 +74,7 @@ Exports tagged source-row IDs that were actually used in generated payments, inc
 - source row value
 - generated payment ID
 - generated message ID
+- comma-delimited source tags
 
 Tagged rows can come from any supported source list, including narratives, if those rows are used in a generated payment.
 

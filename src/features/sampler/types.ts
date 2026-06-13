@@ -14,6 +14,57 @@ export interface SourceEntry {
   id: string
   value: string
   isBadActor: boolean
+  tags: string[]
+}
+
+export type ResultLabel =
+  | 'TRUE_POSITIVE'
+  | 'FALSE_POSITIVE'
+  | 'TRUE_NEGATIVE'
+  | 'FALSE_NEGATIVE'
+
+export type ConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'greater_than'
+  | 'greater_than_or_equal'
+  | 'less_than'
+  | 'less_than_or_equal'
+  | 'contains'
+  | 'not_contains'
+
+export interface MatchCondition {
+  id: string
+  field: string
+  operator: ConditionOperator
+  value: string
+}
+
+export interface ResultsTable {
+  header: string[]
+  rows: Record<string, string>[]
+}
+
+export interface BadActorListItem {
+  actor_id: string
+  value: string
+  payment_id: string
+  message_id: string
+  tags: string[]
+}
+
+export interface AnalysisSettings {
+  paymentIdColumn: string
+  conditionMode: 'all' | 'any'
+  conditions: MatchCondition[]
+}
+
+export interface AnalyzerState {
+  resultsFileName: string
+  results: ResultsTable
+  badActorsFileName: string
+  badActors: BadActorListItem[]
+  settings: AnalysisSettings
 }
 
 export interface PersonProfile {
@@ -68,4 +119,5 @@ export interface SamplerState {
   payments: PaymentSample[]
   generationSettings: GenerationSettings
   validationMessages: string[]
+  analyzer: AnalyzerState
 }

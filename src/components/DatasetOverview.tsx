@@ -16,6 +16,7 @@ export function DatasetOverview({ datasets }: DatasetOverviewProps) {
               <th>Dataset</th>
               <th>Rows</th>
               <th>Bad actor rows</th>
+              <th>Tagged rows</th>
               <th>Preview</th>
             </tr>
           </thead>
@@ -25,6 +26,7 @@ export function DatasetOverview({ datasets }: DatasetOverviewProps) {
                 <td>{datasetLabels[kind as DatasetKind]}</td>
                 <td>{values.length}</td>
                 <td>{values.filter((entry) => entry.isBadActor).length}</td>
+                <td>{values.filter((entry) => entry.tags.length > 0).length}</td>
                 <td>{values.slice(0, 3).map((entry) => entry.value).join(', ') || 'No data loaded'}</td>
               </tr>
             ))}

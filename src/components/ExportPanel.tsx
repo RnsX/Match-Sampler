@@ -3,6 +3,8 @@ interface ExportPanelProps {
   onExportBadActorIds: () => void
   onExportCsv: () => void
   onExportZip: () => void
+  onExportState: () => void
+  onImportState: (file: File | null) => void
 }
 
 export function ExportPanel({
@@ -10,6 +12,8 @@ export function ExportPanel({
   onExportBadActorIds,
   onExportCsv,
   onExportZip,
+  onExportState,
+  onImportState,
 }: ExportPanelProps) {
   return (
     <div className="button-row button-row--exports">
@@ -32,6 +36,20 @@ export function ExportPanel({
       <button className="button" disabled={disabled} type="button" onClick={onExportZip}>
         Export XML zip
       </button>
+      <button className="button button--ghost" type="button" onClick={onExportState}>
+        Export app state JSON
+      </button>
+      <label className="button button--ghost file-input-button">
+        <input
+          accept=".json,application/json"
+          type="file"
+          onChange={(event) => {
+            onImportState(event.target.files?.[0] ?? null)
+            event.currentTarget.value = ''
+          }}
+        />
+        Import app state JSON
+      </label>
     </div>
   )
 }
