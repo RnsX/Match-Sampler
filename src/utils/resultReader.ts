@@ -41,9 +41,13 @@ function getRightValues(
 ) {
   const functionMatch = condition.value.match(/^getBadActor(?:Value)?\(([^)]+)\)$/i)
   if (functionMatch) {
-    const referencedPaymentId = result[functionMatch[1].trim()] ?? paymentId
+    const referencedIdentifier = result[functionMatch[1].trim()] ?? paymentId
     return badActors
-      .filter((actor) => actor.payment_id === referencedPaymentId)
+      .filter(
+        (actor) =>
+          actor.payment_id === referencedIdentifier ||
+          actor.message_id === referencedIdentifier,
+      )
       .map((actor) => actor.value)
   }
   const fieldMatch = condition.value.match(/^result\.(.+)$/)
@@ -85,23 +89,39 @@ export function analyzeResults(
   badActors: BadActorListItem[],
   settings: AnalysisSettings,
 ): AnalysisRow[] {
-  const badActorsByPayment = new Map<string, BadActorListItem[]>()
+  const badActorsByIdentifier = new Map<string, BadActorListItem[]>()
+  const badActorPayments = new Map<string, BadActorListItem[]>()
+  const appendActor = (map: Map<string, BadActorListItem[]>, key: string, actor: BadActorListItem) => {
+    if (!key) {
+      return
+    }
+
+    const existingActors = map.get(key) ?? []
+    if (!existingActors.some((item) => item.actor_id === actor.actor_id)) {
+      map.set(key, [...existingActors, actor])
+    }
+  }
+
   badActors.forEach((actor) => {
-    badActorsByPayment.set(actor.payment_id, [
-      ...(badActorsByPayment.get(actor.payment_id) ?? []),
-      actor,
-    ])
+    appendActor(badActorsByIdentifier, actor.payment_id, actor)
+    appendActor(badActorsByIdentifier, actor.message_id, actor)
+    appendActor(badActorPayments, actor.payment_id || actor.message_id, actor)
   })
 
-  return results.rows.map((result) => {
+  const analyzedIdentifiers = new Set<string>()
+  const analyzedRows = results.rows.map((result) => {
     const paymentId = result[settings.paymentIdColumn] ?? ''
+    if (paymentId) {
+      analyzedIdentifiers.add(paymentId)
+    }
+
     const checks = settings.conditions.map((condition) =>
       conditionMatches(condition, result, badActors, paymentId),
     )
     const predictedPositive =
       checks.length > 0 &&
       (settings.conditionMode === 'all' ? checks.every(Boolean) : checks.some(Boolean))
-    const actualActors = badActorsByPayment.get(paymentId) ?? []
+    const actualActors = badActorsByIdentifier.get(paymentId) ?? []
     const actualPositive = actualActors.length > 0
     const label: ResultLabel = predictedPositive
       ? actualPositive ? 'TRUE_POSITIVE' : 'FALSE_POSITIVE'
@@ -115,6 +135,24 @@ export function analyzeResults(
       predictedPositive,
     }
   })
+
+  const missingBadActorRows = Array.from(badActorPayments.entries())
+    .filter(([, actors]) =>
+      actors.every(
+        (actor) =>
+          !analyzedIdentifiers.has(actor.payment_id) &&
+          !analyzedIdentifiers.has(actor.message_id),
+      ),
+    )
+    .map(([paymentKey, actors]) => ({
+      result: {},
+      paymentId: paymentKey,
+      label: 'FALSE_NEGATIVE' as ResultLabel,
+      tags: Array.from(new Set(actors.flatMap((actor) => actor.tags))),
+      predictedPositive: false,
+    }))
+
+  return [...analyzedRows, ...missingBadActorRows]
 }
 
 export function calculateMetrics(rows: AnalysisRow[]): AnalysisMetrics {

@@ -13,6 +13,7 @@ interface SourceListManagerProps {
   onUpdateTags: (kind: DatasetKind, id: string, tags: string[]) => void
   onToggleBadActor: (kind: DatasetKind, id: string) => void
   onDeleteEntry: (kind: DatasetKind, id: string) => void
+  onClearList: (kind: DatasetKind) => void
 }
 
 export function SourceListManager({
@@ -24,6 +25,7 @@ export function SourceListManager({
   onUpdateTags,
   onToggleBadActor,
   onDeleteEntry,
+  onClearList,
 }: SourceListManagerProps) {
   const [draftValue, setDraftValue] = useState('')
   const [draftIsBadActor, setDraftIsBadActor] = useState(false)
@@ -74,8 +76,21 @@ export function SourceListManager({
             <p className="section-card__eyebrow">List preview and maintenance</p>
             <h3>{datasetLabels[activeKind]}</h3>
           </div>
-          <div className="source-manager__summary">
-            <span>{activeDataset.length} entries</span>
+          <div className="source-manager__header-actions">
+            <div className="source-manager__summary">
+              <span>{activeDataset.length} entries</span>
+            </div>
+            <button
+              className="button button--ghost button--small button--danger"
+              disabled={activeDataset.length === 0}
+              type="button"
+              onClick={() => {
+                onClearList(activeKind)
+                resetEditing()
+              }}
+            >
+              Clear list
+            </button>
           </div>
         </div>
 

@@ -22,6 +22,7 @@ import {
   datasetEntryTagsUpdated,
   datasetEntryRemoved,
   datasetEntryUpdated,
+  datasetCleared,
   datasetLoaded,
   generationSettingsUpdated,
   paymentsGenerated,
@@ -272,6 +273,9 @@ function App() {
               }}
               onDeleteEntry={(kind, id) => {
                 dispatch(datasetEntryRemoved({ kind, id }))
+              }}
+              onClearList={(kind) => {
+                dispatch(datasetCleared({ kind }))
               }}
             />
           </SectionCard>

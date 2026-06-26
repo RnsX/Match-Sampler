@@ -378,6 +378,14 @@
   font-weight: 700;
 }
 
+.source-manager__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .source-manager__add-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

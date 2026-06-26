@@ -143,6 +143,12 @@ const samplerSlice = createSlice({
       state.payments = []
       state.validationMessages = []
     },
+    datasetCleared: (state, action: PayloadAction<{ kind: DatasetKind }>) => {
+      state.datasets[action.payload.kind] = []
+      state.generatedPersons = []
+      state.payments = []
+      state.validationMessages = []
+    },
     generationSettingsUpdated: (
       state,
       action: PayloadAction<Partial<GenerationSettings>>,
@@ -204,6 +210,7 @@ export const {
   datasetEntryTagsUpdated,
   datasetEntryRemoved,
   datasetEntryUpdated,
+  datasetCleared,
   generationSettingsUpdated,
   personsGenerated,
   paymentsGenerated,
